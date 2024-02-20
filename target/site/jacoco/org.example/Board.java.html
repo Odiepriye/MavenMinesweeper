@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Board.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MavenMineSweeper</a> &gt; <a href="index.source.html" class="el_package">org.example</a> &gt; <span class="el_source">Board.java</span></div><h1>Board.java</h1><pre class="source lang-java linenums">package org.example;
+
+import java.util.Random;
+
+<span class="fc" id="L5">public class Board {</span>
+    private byte row;
+    private byte col;
+    private byte bomb;
+    public Tile[][] tiles;
+    private Random random;
+    private Flag flags;
+    private GameTimer timer;
+    private long flippables;
+<span class="fc" id="L14">    private boolean gameStarted = false;</span>
+<span class="fc" id="L15">    private boolean gameLost = false;</span>
+<span class="fc" id="L16">    private boolean gameWon = false;</span>
+<span class="fc" id="L17">    private boolean numberSet = false;</span>
+    public String normal(){
+<span class="fc" id="L19">        row = 10;</span>
+<span class="fc" id="L20">        col = 8;</span>
+<span class="fc" id="L21">        bomb = 10;</span>
+<span class="fc" id="L22">        flippables = (row*col) - bomb;</span>
+<span class="fc" id="L23">        tiles = new Tile [row][col];</span>
+<span class="fc" id="L24">        flags = new Flag((byte) 10);</span>
+<span class="fc" id="L25">        timer = new GameTimer(179);</span>
+<span class="fc" id="L26">        initialiseBoard();</span>
+<span class="fc" id="L27">        return &quot;normal&quot;;</span>
+    }
+    public String ultimate(){
+<span class="nc" id="L30">        row = 25;</span>
+<span class="nc" id="L31">        col = 20;</span>
+<span class="nc" id="L32">        bomb = 29;</span>
+<span class="nc" id="L33">        flippables = 471;</span>
+<span class="nc" id="L34">        tiles = new Tile[row][col];</span>
+<span class="nc" id="L35">        flags = new Flag((byte) 29);</span>
+<span class="nc" id="L36">        timer = new GameTimer(479);</span>
+<span class="nc" id="L37">        initialiseBoard();</span>
+<span class="nc" id="L38">        return &quot;ultimate&quot;;</span>
+    }
+    private void initialiseBoard(){
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        for (int i = 0; i &lt; row; i++) {</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            for (int j = 0; j &lt; col; j++) {</span>
+<span class="fc" id="L43">                tiles[i][j] = new Tile();</span>
+            }
+        }
+<span class="fc" id="L46">        random = new Random();</span>
+<span class="fc" id="L47">    }</span>
+    public void firstFlip(byte r, byte c){
+<span class="fc" id="L49">        tiles[r][c].flip();</span>
+<span class="fc" id="L50">        flippables--;</span>
+<span class="fc" id="L51">        setBombs(r,c);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if(!numberSet){</span>
+<span class="fc" id="L53">            setNumbers();</span>
+<span class="fc" id="L54">            numberSet = true;</span>
+        }
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (tiles[r][c].getNumber() == 0) {</span>
+<span class="fc" id="L57">            boolean[][] visited = new boolean[row][col];</span>
+//            System.out.println(&quot;first 0&quot;);
+<span class="fc" id="L59">            flashFlip(r, c, visited);</span>
+        }
+<span class="fc" id="L61">    }</span>
+    private void setBombs(byte r, byte c){
+<span class="fc" id="L63">        int bombSet = 0;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        while(bombSet &lt; bomb){</span>
+<span class="fc" id="L65">            int rRow = random.nextInt(row);</span>
+<span class="fc" id="L66">            int rCol = random.nextInt(col);</span>
+<span class="fc bfc" id="L67" title="All 4 branches covered.">            boolean isAdjacent = Math.abs(r - rRow) &lt;= 1 &amp;&amp; Math.abs(c - rCol) &lt;= 1;</span>
+<span class="pc bpc" id="L68" title="1 of 8 branches missed.">            if (!(r == rRow &amp;&amp; c == rCol) &amp;&amp; !isAdjacent &amp;&amp; !tiles[rRow][rCol].isBomb()){</span>
+<span class="fc" id="L69">                tiles[rRow][rCol].setBomb(true);</span>
+<span class="fc" id="L70">                bombSet++;</span>
+            }
+<span class="fc" id="L72">        }</span>
+<span class="fc" id="L73">    }</span>
+    private void setNumbers(){
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        for (byte i = 0; i &lt; row; i++) {</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            for (byte j = 0; j &lt; col; j++) {</span>
+<span class="fc" id="L77">                byte number = calculateBombs(i,j);</span>
+<span class="fc" id="L78">                tiles[i][j].setNumber(number);</span>
+            }
+        }
+<span class="fc" id="L81">    }</span>
+    private byte calculateBombs(byte r, byte c){
+<span class="fc" id="L83">        byte adjacentBombs = 0;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (int i = Math.max(0, r - 1); i &lt; Math.min(row, r + 2); i++) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            for (int j = Math.max(0, c - 1); j &lt; Math.min(col, c + 2); j++) {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                if(tiles[i][j].isBomb()){</span>
+<span class="fc" id="L87">                    adjacentBombs++;</span>
+                }
+            }
+        }
+<span class="fc" id="L91">        return adjacentBombs;</span>
+    }
+    private boolean isValidTile(int r, int c) {
+<span class="pc bpc" id="L94" title="4 of 8 branches missed.">        return r &gt;= 0 &amp;&amp; r &lt; row &amp;&amp; c &gt;= 0 &amp;&amp; c &lt; col;</span>
+    }
+    public void flashFlip(byte r, byte c, boolean[][] visited){
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (visited[r][c]) {</span>
+<span class="nc" id="L98">            return;</span>
+        }
+<span class="fc" id="L100">        visited[r][c] = true;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (tiles[r][c].getNumber() == 0) {</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            for (int i = Math.max(0, r - 1); i &lt;= Math.min(row - 1, r + 1); i++) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                for (int j = Math.max(0, c - 1); j &lt;= Math.min(col - 1, c + 1); j++) {</span>
+<span class="pc bpc" id="L104" title="1 of 4 branches missed.">                    if(isValidTile(i,j) &amp;&amp; !visited[i][j]){</span>
+<span class="fc" id="L105">                        tiles[i][j].flip();</span>
+<span class="fc" id="L106">                        flashFlip((byte) i, (byte) j, visited);</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L111">    }</span>
+    public byte getRow() {
+<span class="fc" id="L113">        return row;</span>
+    }
+    public byte getCol() {
+<span class="fc" id="L116">        return col;</span>
+    }
+    public long getFlippables() {
+<span class="fc" id="L119">        return flippables;</span>
+    }
+    public boolean isGameStarted() {
+<span class="fc" id="L122">        return gameStarted;</span>
+    }
+    public boolean isNumberSet() {
+<span class="fc" id="L125">        return numberSet;</span>
+    }
+    public byte viewFlags(){
+<span class="fc" id="L128">        return flags.getFlags();</span>
+    }
+    public long viewTimer(){
+<span class="nc" id="L131">        return timer.getTime();</span>
+    }
+    public void leftClickTile(byte r, byte c) {
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (!gameStarted) {</span>
+<span class="fc" id="L135">            firstFlip(r, c);</span>
+<span class="fc" id="L136">            gameStarted = true;</span>
+<span class="fc" id="L137">            return;</span>
+        }
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (!tiles[r][c].isFlagged()) {</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (tiles[r][c].isBomb()) {</span>
+<span class="nc" id="L141">                gameLost = true;</span>
+            } else {
+<span class="nc" id="L143">                tiles[r][c].flip();</span>
+<span class="nc" id="L144">                flippables--;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                if (tiles[r][c].getNumber() == 0) {</span>
+<span class="nc" id="L146">                    boolean[][] visited = new boolean[row][col];</span>
+<span class="nc" id="L147">                    flashFlip(r, c, visited);</span>
+                }
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                if (flippables == 0) {</span>
+<span class="nc" id="L150">                    gameWon = true;</span>
+                }
+            }
+        }
+<span class="nc" id="L154">    }</span>
+    public void rightClickTile(byte r, byte c) {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (!tiles[r][c].isFlipped()) {</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">            if (!tiles[r][c].isFlagged()) {</span>
+<span class="fc" id="L158">                tiles[r][c].setFlagged(true);</span>
+<span class="fc" id="L159">                flags.drop();</span>
+            } else {
+<span class="nc" id="L161">                tiles[r][c].setFlagged(false);</span>
+<span class="nc" id="L162">                flags.lift();</span>
+            }
+        }
+<span class="fc" id="L165">    }</span>
+    public void restartGame() {
+<span class="fc" id="L167">        gameStarted = false;</span>
+<span class="fc" id="L168">        gameLost = false;</span>
+<span class="fc" id="L169">        gameWon = false;</span>
+<span class="fc" id="L170">        numberSet = false;</span>
+<span class="fc" id="L171">        normal();</span>
+<span class="fc" id="L172">    }</span>
+    public void changeGameMode(String mode) {
+<span class="nc" id="L174">        restartGame();</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (mode.equals(&quot;normal&quot;)) {</span>
+<span class="nc" id="L176">            normal();</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        } else if (mode.equals(&quot;ultimate&quot;)) {</span>
+<span class="nc" id="L178">            ultimate();</span>
+        }
+<span class="nc" id="L180">    }</span>
+    public String viewRules() {
+<span class="fc" id="L182">        return  &quot;* \t\tFlip a Tile: Click on a tile to reveal what's underneath it.\n&quot; +</span>
+                &quot;* \t\tFlag a Tile: Right-click on a tile to mark it as a potential mine.\n&quot; +
+                &quot;* \t\tClear Flag : Right-click again on a flagged tile to unflag it.\n&quot; +
+                &quot;* \t\tWin the Game: Successfully reveal all non-mine tiles on the board without triggering any mines.\n&quot; +
+                &quot;* \t\tLose the Game: Hit a mine and Loose.\n&quot; +
+                &quot;* \t\tRestart Game: Clear the board and restart the game.\n&quot;
+                //     &quot;* \t\tChange game modes: Restart the game, clearing the board, reset the timer and choose between different difficulty levels.\n&quot; +
+                ;
+    }
+    public boolean isGameLost() {
+<span class="fc" id="L192">        return gameLost;</span>
+    }
+    public boolean isGameWon() {
+<span class="fc" id="L195">        return gameWon;</span>
+    }
+    public void printBoard() {
+<span class="nc" id="L198">        System.out.println(&quot;Current Board State:&quot;);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        for (int i = 0; i &lt; row; i++) {</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            for (int j = 0; j &lt; col; j++) {</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                if (tiles[i][j].isFlipped()) {</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                    if (tiles[i][j].isBomb()) {</span>
+<span class="nc" id="L203">                        System.out.print(&quot;* &quot;); // Representing a flipped bomb</span>
+                    } else {
+<span class="nc" id="L205">                        System.out.print(tiles[i][j].getNumber() + &quot; &quot;);</span>
+                    }
+                } else {
+<span class="nc" id="L208">                    System.out.print(&quot;. &quot;); // Representing an unflipped tile</span>
+                }
+            }
+<span class="nc" id="L211">            System.out.println();</span>
+        }
+<span class="nc" id="L213">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

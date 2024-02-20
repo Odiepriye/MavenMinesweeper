@@ -4,7 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class BoardTest {
-    private Board board;
+    private final Board board;
     public BoardTest(){
         board = new Board();
         board.normal();

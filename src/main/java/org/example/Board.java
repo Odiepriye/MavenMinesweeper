@@ -46,11 +46,6 @@ public class Board {
         random = new Random();
     }
     public void firstFlip(byte r, byte c){
-//        for (int i = Math.max(0, r - 1); i < Math.min(row, r + 2); i++) {
-//            for (int j = Math.max(0, c - 1); j < Math.min(col, c + 2); j++) {
-//                tiles[i][j].setBomb(false);
-//            }
-//        }
         tiles[r][c].flip();
         flippables--;
         setBombs(r,c);
@@ -113,13 +108,21 @@ public class Board {
                 }
             }
         }
-//        printBoard();
     }
     public byte getRow() {
         return row;
     }
     public byte getCol() {
         return col;
+    }
+    public long getFlippables() {
+        return flippables;
+    }
+    public boolean isGameStarted() {
+        return gameStarted;
+    }
+    public boolean isNumberSet() {
+        return numberSet;
     }
     public byte viewFlags(){
         return flags.getFlags();
